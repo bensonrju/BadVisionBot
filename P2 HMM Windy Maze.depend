@@ -1,0 +1,8 @@
+# depslib dependency file v1.0
+1753833822 source:c:\users\hotwheels\documents\assignments\2025-2 summer\cis 479 (artificial intelligence)\p2 hmm windy maze\main.cpp
+	<iostream>
+	<iomanip>
+	<vector>
+	<cstdlib>
+	<ctime>
+
