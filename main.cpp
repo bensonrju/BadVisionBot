@@ -39,7 +39,7 @@ int main() {
 
 	print(maze);
 	Position goal = locate(CellType::Goal, maze);
-	cout << "Goal: " << goal.x << ",  " << goal.y << endl;
+	//cout << "Goal: " << goal.x << ",  " << goal.y << endl;
 
 	execute(maze, goal);
 	//cout << Direction::East.Left() << endl;
@@ -66,22 +66,36 @@ int main() {
 */
 
 vector<Position> moves = {
-	{0,	-1},    // West
-	{-1, 0},    // North
-	{0,	1},     // East
-	{1,	0},     // South
+//  col, row
+//   x,  y
+	{-1,  0},   // West
+	{ 0, -1},   // North
+	{ 1,  0},   // East
+	{ 0,  1}    // South
 };
 
 vector<bool> getReality(vector<vector<Cell>>& maze, int x, int y) {
 	vector<bool> reality(4);
 	int yBound = maze.size(), xBound = maze[0].size();
+    char dir[] = {'W', 'N', 'E', 'S'};
+
 	for (int i = 0; i < (int)reality.size(); i++) {
 		int new_x = x + moves[i].x, new_y = y + moves[i].y;
+        /*
+        cout << "y[" << y << "] x[" << x << "] go " << dir[i]
+             << ": " << "y(" << new_y << ")  x(" << new_x 
+             << ")" << endl; */
+
 		if (!inside(new_x, new_y, xBound, yBound))
 			reality[i] = true;
         else
-            reality[i] = (maze[new_y][new_x].type == CellType::Wall);
+            reality[i] = (maze[new_y][new_x].type == CellType::Wall);         
 	}
+    /*
+    cout << "Reality for " << "y[" << y << "] x[" << x << "]: "
+             << reality[0] << ", " << reality[1] << ", "
+             << reality[2] << ", " << reality[3] << endl;
+    */
 	return reality;
 }
 
@@ -92,11 +106,25 @@ float computePresence(float cellProbability, vector<bool> reality, vector<bool> 
 
 	for (int i = 0; i < length; ++i) {
 		float probability;
+
+        // D := Direction
+        // C := Sector at (i (row), j (col))
+        //  P(ZiD | St=C)
+
+        // wall = true
+        /*
 		if (reality[i] == sensory[i])
-            probability = reality[i] ? sensingWall : sensingWallMisid;
+            probability = sensory[i] ? sensingWall : sensingPath;
 		else
-			probability = reality[i] ? sensingPathMisid: sensingPath;
-		cellProbability *= probability;
+			probability = sensory[i] ? sensingWallMisid : sensingPathMisid;
+		*/
+        if (reality[i]) 
+            probability = sensory[i] ? sensingWall : sensingWallMisid;
+        else   
+            probability = sensory[i] ? sensingPathMisid : sensingPath;
+
+        cellProbability *= probability;
+        
 	}
 	return cellProbability;
 }
