@@ -66,8 +66,8 @@ int main() {
 */
 
 vector<Position> moves = {
-//  col, row
-//   x,  y
+	//  col, row
+	//   x,  y
 	{-1,  0},   // West
 	{ 0, -1},   // North
 	{ 1,  0},   // East
@@ -77,25 +77,13 @@ vector<Position> moves = {
 vector<bool> getReality(vector<vector<Cell>>& maze, int x, int y) {
 	vector<bool> reality(4);
 	int yBound = maze.size(), xBound = maze[0].size();
-    char dir[] = {'W', 'N', 'E', 'S'};
-
 	for (int i = 0; i < (int)reality.size(); i++) {
 		int new_x = x + moves[i].x, new_y = y + moves[i].y;
-        /*
-        cout << "y[" << y << "] x[" << x << "] go " << dir[i]
-             << ": " << "y(" << new_y << ")  x(" << new_x 
-             << ")" << endl; */
-
 		if (!inside(new_x, new_y, xBound, yBound))
 			reality[i] = true;
-        else
-            reality[i] = (maze[new_y][new_x].type == CellType::Wall);         
+		else
+			reality[i] = (maze[new_y][new_x].type == CellType::Wall);
 	}
-    /*
-    cout << "Reality for " << "y[" << y << "] x[" << x << "]: "
-             << reality[0] << ", " << reality[1] << ", "
-             << reality[2] << ", " << reality[3] << endl;
-    */
 	return reality;
 }
 
@@ -106,30 +94,43 @@ float computePresence(float cellProbability, vector<bool> reality, vector<bool> 
 
 	for (int i = 0; i < length; ++i) {
 		float probability;
-
-        // D := Direction
-        // C := Sector at (i (row), j (col))
-        //  P(ZiD | St=C)
-
-        // wall = true
-        /*
-		if (reality[i] == sensory[i])
-            probability = sensory[i] ? sensingWall : sensingPath;
+		if (reality[i])
+			probability = sensory[i] ? sensingWall : sensingWallMisid;
 		else
-			probability = sensory[i] ? sensingWallMisid : sensingPathMisid;
-		*/
-        if (reality[i]) 
-            probability = sensory[i] ? sensingWall : sensingWallMisid;
-        else   
-            probability = sensory[i] ? sensingPathMisid : sensingPath;
+			probability = sensory[i] ? sensingPathMisid : sensingPath;
 
-        cellProbability *= probability;
-        
+		cellProbability *= probability;
 	}
 	return cellProbability;
 }
 
+vector<float> transitionProb(Direction::Directions dir) {
+	vector<vector<float>> directionProb = {
+		{0.7, 0.1, 0, 0.2},
+		{0.2, 0.7, 0.1, 0},
+		{0, 0.2, 0.7, 0.1},
+		{0.0, 0, 0.2, 0.7}
+	};
+	switch (dir) {
+		case Direction::Directions::West:
+			break;
+
+		default:
+			break;
+	}
+
+	if (dir == Direction::Directions::West)
+		return directionProb[0];
+	if (dir == Direction::Directions::North)
+		return directionProb[1];
+	if (dir == Direction::Directions::West)
+		return directionProb[0];
+	if (dir == Direction::Directions::West)
+		return directionProb[0];
+}
+
 void execute(vector<vector<Cell>>& maze, Position goal) {
+	int yBound = maze.size(), xBound = maze[0].size();
 	//return;
 
 	//[W,N,E,S]
@@ -168,10 +169,21 @@ void execute(vector<vector<Cell>>& maze, Position goal) {
 	cout << "Filtering after Evidence [0, 0, 0, 1]" << endl;
 	print(maze);
 	return;
-	/*
-	    //2. Moving north-ward  //Windy Movement Probability
-	    movedDirection = windyMove(Direction::North);
 
+	//2. Moving north-ward  //Windy Movement Probability
+	for (int i = 0; i < (int)maze.size(); ++i)
+		for (int j = 0; j < (int)maze[0].size(); ++j) {
+			float prob;
+			for (int k = 0; k < 4; ++k) {
+				int new_x = j + moves[i].x, new_y = i + moves[i].y;
+				if (!inside(new_x, new_y, xBound, yBound))
+					prob += maze[i][j].label /* * transition_prob(to neighbor) */;
+				else
+					prob += maze[new_y][new_x].label /* * transition_prob(to neighbor) */;
+			}
+			maze[i][j].label *= prob;
+		}
+	/*
 	    //3. Sensing: [1,0,0,0] //Filtering after Evidence
 	    sensory = {false, true, true, true};
 

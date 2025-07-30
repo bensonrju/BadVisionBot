@@ -48,8 +48,8 @@ inline constexpr Direction Direction::West{Direction::Directions::West};
 inline std::ostream& operator<<(std::ostream& os, const Direction& d) {
 	return os << d.ToString();
 }
-
-Direction windyMove(Direction intendedDirection) {
+/*
+    Direction windyMove(Direction intendedDirection) {
 	int chance = (rand() % 100) + 1; // 1 to 100
 
 	// 70% to move intended direction
@@ -63,4 +63,5 @@ Direction windyMove(Direction intendedDirection) {
 	// 10% to move right of intended direction
 	else
 		return intendedDirection.Right();
-}
+    }
+*/
