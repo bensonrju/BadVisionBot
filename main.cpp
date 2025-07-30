@@ -149,16 +149,17 @@ Direction windyMove(Direction intendedDirection) {
 }
 
 vector<bool> sensing(vector<bool>& sensed) {
-    int size = (int)sensed.size();
-    vector<bool> actuallySensed(size);
-    for (int i = 0; i < size; ++i) {
-        int chance = (rand() % 100) + 1; // 1 to 100
-        bool evaluated = sensed[i] ? chance <= (1 - sensingPath) * 100 : chance <= (1 - sensingWall) * 100;
-        if (evaluated)
-            actuallySensed[i] = !sensed[i];
-        else actuallySensed[i] = sensed[i];
-    }
-    return actuallySensed;
+	int size = (int)sensed.size();
+	vector<bool> actuallySensed(size);
+	for (int i = 0; i < size; ++i) {
+		int chance = (rand() % 100) + 1; // 1 to 100
+		bool evaluated = sensed[i] ? chance <= (1 - sensingPath) * 100 : chance <= (1 - sensingWall) * 100;
+		if (evaluated)
+			actuallySensed[i] = !sensed[i];
+		else
+			actuallySensed[i] = sensed[i];
+	}
+	return actuallySensed;
 }
 
 void execute(vector<vector<Cell>>& maze, Position goal) {
@@ -181,38 +182,39 @@ void execute(vector<vector<Cell>>& maze, Position goal) {
 	sensed = sensing(true, true, true, false);
 
 	//2. Moving north-ward  //Windy Movement Probability
-    movedDirection = windyMove(Direction::North);
+	movedDirection = windyMove(Direction::North);
 
 	//3. Sensing: [1,0,0,0] //Filtering after Evidence
-    sensed = sensing(false, true, true, true);
+	sensed = sensing(false, true, true, true);
 
 	//4. Moving north-ward  //Windy Movement Probability
 	movedDirection = windyMove(Direction::North);
 
 	//5. Sensing: [1,1,0,0] //Filtering after Evidence
-    sensed = sensing(false, false, true, true);
+	sensed = sensing(false, false, true, true);
 
 	//6. Moving east-ward   //Windy Movement Probability
 	movedDirection = windyMove(Direction::East);
 
 	//7. Sensing: [0,1,1,0] //Filtering after Evidence
-    sensed = sensing(true, false, false, true);
+	sensed = sensing(true, false, false, true);
 }
 
 void print(const vector<vector<Cell>>& maze) {
 	int rows = maze.size(), columns = maze[0].size();
-    cout << endl;
+	cout << endl;
 	for (int i = 0; i < rows; i++) {
 		cout << "  ";
-        for (int j = 0; j < columns; j++) {
-            const Cell& temp = maze[i][j];
-            if (temp.type == CellType::Wall) {
-                cout << setw(6) << right << "#####";
-            } else {
-                // Print probability (label) formatted as "--.--"
-                cout << setw(6) << right << fixed << setprecision(2) << temp.label;
-            }
-        }
-        cout << endl;
+		for (int j = 0; j < columns; j++) {
+			const Cell& temp = maze[i][j];
+			if (temp.type == CellType::Wall)
+				cout << setw(6) << right << "#####";
+
+			else {
+				// Print probability (label) formatted as "--.--"
+				cout << setw(6) << right << fixed << setprecision(2) << temp.label;
+			}
+		}
+		cout << endl;
 	}
 }
