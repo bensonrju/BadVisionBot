@@ -13,8 +13,10 @@ const float straightProb = 0.7;
 const float LeftProb = 0.2;
 const float RightProb = 0.1;
 
-const float sensingPath = 0.85;
 const float sensingWall = 0.95;
+const float sensingWallMisid = 0.05;
+const float sensingPath = 0.85;
+const float sensingPathMisid = 0.15;
 
 bool inside(int x, int y, int max_x, int max_y) {
 	return (x >= 0 && x < max_x && y >= 0 && y < max_y);
@@ -75,12 +77,10 @@ vector<bool> getReality(vector<vector<Cell>>& maze, int x, int y) {
 	int yBound = maze.size(), xBound = maze[0].size();
 	for (int i = 0; i < (int)reality.size(); i++) {
 		int new_x = x + moves[i].x, new_y = y + moves[i].y;
-		if (!inside(new_x, new_y, xBound, yBound)) {
-			reality[i] = false;
-			continue;
-		}
-        reality[i] = (maze[new_y][new_x].type != CellType::Wall);
-		//maze[new_y][new_x].type == CellType::Wall ? reality[i] = false : reality[i] = true;
+		if (!inside(new_x, new_y, xBound, yBound))
+			reality[i] = true;
+        else
+            reality[i] = (maze[new_y][new_x].type == CellType::Wall);
 	}
 	return reality;
 }
@@ -92,17 +92,10 @@ float computePresence(float cellProbability, vector<bool> reality, vector<bool> 
 
 	for (int i = 0; i < length; ++i) {
 		float probability;
-		if (reality[i] == sensory[i]) {
-			if (reality[i])
-				probability = sensingPath;
-			else
-				probability = sensingWall;
-		}
-		else if (reality[i])
-			probability = (1 - sensingPath);
+		if (reality[i] == sensory[i])
+            probability = reality[i] ? sensingWall : sensingWallMisid;
 		else
-			probability = (1 - sensingWall);
-
+			probability = reality[i] ? sensingPathMisid: sensingPath;
 		cellProbability *= probability;
 	}
 	return cellProbability;
@@ -112,8 +105,8 @@ void execute(vector<vector<Cell>>& maze, Position goal) {
 	//return;
 
 	//[W,N,E,S]
-	//true: path
-	//false: wall
+	//false/0: path
+	//true/1: wall
 
 	Direction movedDirection;
 	vector<bool> sensory(4);
@@ -127,7 +120,7 @@ void execute(vector<vector<Cell>>& maze, Position goal) {
 	print(maze);
 
 	//1. Sensing: [0,0,0,1] //Filtering after Evidence
-	sensory = {true, true, true, false};
+	sensory = {false, false, false, true};
 	float sum = 0;
 	for (int i = 0; i < (int)maze.size(); ++i)
 		for (int j = 0; j < (int)maze[0].size(); ++j)
