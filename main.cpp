@@ -22,6 +22,7 @@ bool inside(int x, int y, int max_x, int max_y) {
 
 vector<bool> sensing(vector<bool>& sensed);
 void execute(vector<vector<Cell>>& maze, Position goal);
+float computePresence(float prev, vector<bool> reality, vector<bool> sensory);
 void print(const vector<vector<Cell>>& maze);
 
 int main() {
@@ -42,7 +43,7 @@ int main() {
 	//cout << Direction::East.Left() << endl;
 	return 0;
 }
-
+/*
 vector<bool> sensing(vector<bool>& sensed) {
 	int size = (int)sensed.size();
 	vector<bool> actuallySensed(size);
@@ -60,55 +61,97 @@ vector<bool> sensing(vector<bool>& sensed) {
 
 	return actuallySensed;
 }
+*/
+float computePresence(float prev, vector<bool> reality, vector<bool> sensory) {
+    int length = (int)reality.size();
+    if (length != (int)sensory.size())
+        return -1;
+
+    float cellProbability = 0;
+    for (int i = 0; i < length; ++i) {
+        float probability;
+        if (reality[i] == sensory[i]) {
+            if (reality[i])
+                probability = sensingPath;
+            else
+                probability = sensingWall;
+        }
+        else
+            if (reality[i])
+                probability = (1 - sensingPath);
+            else
+                probability = (1 - sensingWall);
+
+        if (cellProbability == 0)
+            cellProbability = probability;
+        else
+            cellProbability *= probability;
+    }
+    return cellProbability * prev;
+}
 
 void execute(vector<vector<Cell>>& maze, Position goal) {
-	return;
+	//return;
 
 	//[W,N,E,S]
 	//true: path
 	//false: wall
 
 	Direction movedDirection;
-	vector<bool> sensed(4);
+	vector<bool> sensory(4);
 	//0. Get Initial Location Probabilities
-	float prob = 1 / (countType(CellType::Path, maze) + 1);
+	float prob = 1.0 / (countType(CellType::Path, maze) + 1);
 	for (int i = 0; i < (int)maze.size(); ++i)
 		for (int j = 0; j < (int)maze[0].size(); ++j)
-			if (maze[i][j].type == CellType::Path)
+			if (maze[i][j].type != CellType::Wall)
 				maze[i][j].label = prob;
+    cout << "Initial Location Probabilities" << endl;
+    print(maze);
 
-	/*
-	    //1. Sensing: [0,0,0,1] //Filtering after Evidence
-	    sensed = sensing(true, true, true, false);
-	    for (int i = 0; i < (int)maze.size(); ++i)
-	        for (int j = 0; j < (int)maze[0].size(); ++j)
-	            if (maze[i][j].type == CellType::Path) {
-	                maze[i][j].label
-	            }
+    //1. Sensing: [0,0,0,1] //Filtering after Evidence
+    sensory = {true, true, true, false};
+    float sum = 0;
+    for (int i = 0; i < (int)maze.size(); ++i)
+        for (int j = 0; j < (int)maze[0].size(); ++j)
+            if (maze[i][j].type != CellType::Wall) {
+                float nonNormalized = computePresence(maze[i][j].label, reality, sensory);
+                sum += nonNormalized;
+                maze[i][j].label = nonNormalized;
+            }
 
-	    //2. Moving north-ward  //Windy Movement Probability
-	    movedDirection = windyMove(Direction::North);
+    for (int i = 0; i < (int)maze.size(); ++i)
+        for (int j = 0; j < (int)maze[0].size(); ++j)
+            if (maze[i][j].type != CellType::Wall) {
+                float nonNormalized = maze[i][j].label;
+                maze[i][j].label = nonNormalized / sum;
+            }
 
-	    //3. Sensing: [1,0,0,0] //Filtering after Evidence
-	    sensed = sensing(false, true, true, true);
+    cout << "Filtering after Evidence [0, 0, 0, 1]" << endl;
+    print(maze);
+    return;
+    /*
+    //2. Moving north-ward  //Windy Movement Probability
+    movedDirection = windyMove(Direction::North);
 
-	    //4. Moving north-ward  //Windy Movement Probability
-	    movedDirection = windyMove(Direction::North);
+    //3. Sensing: [1,0,0,0] //Filtering after Evidence
+    sensory = {false, true, true, true};
 
-	    //5. Sensing: [1,1,0,0] //Filtering after Evidence
-	    sensed = sensing(false, false, true, true);
+    //4. Moving north-ward  //Windy Movement Probability
+    movedDirection = windyMove(Direction::North);
 
-	    //6. Moving east-ward   //Windy Movement Probability
-	    movedDirection = windyMove(Direction::East);
+    //5. Sensing: [1,1,0,0] //Filtering after Evidence
+    sensory = {false, false, true, true};
 
-	    //7. Sensing: [0,1,1,0] //Filtering after Evidence
-	    sensed = sensing(true, false, false, true);
-	*/
+    //6. Moving east-ward   //Windy Movement Probability
+    movedDirection = windyMove(Direction::East);
+
+    //7. Sensing: [0,1,1,0] //Filtering after Evidence
+    sensory = {true, false, false, true};
+    */
 }
 
 void print(const vector<vector<Cell>>& maze) {
 	int rows = maze.size(), columns = maze[0].size();
-	cout << endl;
 	for (int i = 0; i < rows; i++) {
 		cout << "  ";
 		for (int j = 0; j < columns; j++) {
@@ -117,8 +160,9 @@ void print(const vector<vector<Cell>>& maze) {
 				cout << setw(6) << right << "#####";
 			else
 				// Print probability (label) formatted as "--.--"
-				cout << setw(6) << right << fixed << setprecision(2) << temp.label;
+				cout << setw(6) << right << fixed << setprecision(2) << temp.label * 100;
 		}
 		cout << endl;
 	}
+    cout << endl;
 }
