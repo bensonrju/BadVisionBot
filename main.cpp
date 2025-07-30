@@ -71,7 +71,7 @@ void execute(vector<vector<Cell>>& maze, Position goal) {
 	Direction movedDirection;
 	vector<bool> sensed(4);
 	//0. Get Initial Location Probabilities
-	float prob = 1 / countType(CellType::Path, maze);
+	float prob = 1 / (countType(CellType::Path, maze) + 1);
 	for (int i = 0; i < (int)maze.size(); ++i)
 		for (int j = 0; j < (int)maze[0].size(); ++j)
 			if (maze[i][j].type == CellType::Path)
