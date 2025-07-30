@@ -80,6 +80,11 @@ void execute(vector<vector<Cell>>& maze, Position goal) {
 	/*
 	    //1. Sensing: [0,0,0,1] //Filtering after Evidence
 	    sensed = sensing(true, true, true, false);
+	    for (int i = 0; i < (int)maze.size(); ++i)
+	        for (int j = 0; j < (int)maze[0].size(); ++j)
+	            if (maze[i][j].type == CellType::Path) {
+	                maze[i][j].label
+	            }
 
 	    //2. Moving north-ward  //Windy Movement Probability
 	    movedDirection = windyMove(Direction::North);
