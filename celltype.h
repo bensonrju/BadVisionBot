@@ -5,8 +5,8 @@
 using namespace std;
 
 struct Position {
-	int x;
-	int y;
+	int row;
+	int col;
 };
 
 enum class CellType { Path, Wall, Start, Goal };

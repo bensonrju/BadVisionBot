@@ -18,22 +18,20 @@ const float sensingWallMisid = 0.05;
 const float sensingPath = 0.85;
 const float sensingPathMisid = 0.15;
 
-bool inside(int x, int y, int max_x, int max_y) {
-	return (x >= 0 && x < max_x && y >= 0 && y < max_y);
+bool inside(int row, int col, int maxRow, int maxCol) {
+	return (row >= 0 && row < maxRow && col >= 0 && col < maxCol);
 }
 
 vector<Position> moves = {
-	//  col, row
-	//   x,  y
-	{-1,  0},   // West
-	{ 0, -1},   // North
-	{ 1,  0},   // East
-	{ 0,  1}    // South
+	{ 0, -1},   // West
+	{-1,  0},   // North
+	{ 0,  1},   // East
+	{ 1,  0}    // South
 };
 
 void execute(vector<vector<Cell>>& maze, Position goal);
 float computePresence(float prev, vector<bool> reality, vector<bool> sensory);
-vector<bool> getReality(vector<vector<Cell>>& maze, int x, int y);
+vector<bool> getReality(vector<vector<Cell>>& maze, int row, int col, int maxRow, int maxCol);
 vector<float> getTransitionProb(Direction dir);
 void print(const vector<vector<Cell>>& maze);
 
@@ -57,7 +55,7 @@ int main() {
 }
 
 void execute(vector<vector<Cell>>& maze, Position goal) {
-	int yBound = maze.size(), xBound = maze[0].size();
+	int rows = maze.size(), columns = maze[0].size(), directions = moves.size();
 	//return;
 
 	//[W,N,E,S]
@@ -65,10 +63,11 @@ void execute(vector<vector<Cell>>& maze, Position goal) {
 	//true/1: wall
 
 	vector<bool> sensory(4);
+	vector<vector<Cell>> predictionMaze;
 	//0. Get Initial Location Probabilities
 	float prob = 1.0 / (countType(CellType::Path, maze) + 1);
-	for (int i = 0; i < (int)maze.size(); ++i)
-		for (int j = 0; j < (int)maze[0].size(); ++j)
+	for (int i = 0; i < rows; ++i)
+		for (int j = 0; j < columns; ++j)
 			if (maze[i][j].type != CellType::Wall)
 				maze[i][j].label = prob;
 	cout << "Initial Location Probabilities" << endl;
@@ -77,16 +76,16 @@ void execute(vector<vector<Cell>>& maze, Position goal) {
 	//1. Sensing: [0,0,0,1] //Filtering after Evidence
 	sensory = {false, false, false, true};
 	float sum = 0;
-	for (int i = 0; i < (int)maze.size(); ++i)
-		for (int j = 0; j < (int)maze[0].size(); ++j)
+	for (int i = 0; i < rows; ++i)
+		for (int j = 0; j < columns; ++j)
 			if (maze[i][j].type != CellType::Wall) {
-				float nonNormalized = computePresence(maze[i][j].label, getReality(maze, j, i), sensory);
+				float nonNormalized = computePresence(maze[i][j].label, getReality(maze, i, j, rows, columns), sensory);
 				sum += nonNormalized;
 				maze[i][j].label = nonNormalized;
 			}
 
-	for (int i = 0; i < (int)maze.size(); ++i)
-		for (int j = 0; j < (int)maze[0].size(); ++j)
+	for (int i = 0; i < rows; ++i)
+		for (int j = 0; j < columns; ++j)
 			if (maze[i][j].type != CellType::Wall) {
 				float nonNormalized = maze[i][j].label;
 				maze[i][j].label = nonNormalized / sum;
@@ -94,35 +93,36 @@ void execute(vector<vector<Cell>>& maze, Position goal) {
 
 	cout << "Filtering after Evidence [0, 0, 0, 1]" << endl;
 	print(maze);
-	return;
 
-	//2. Moving north-ward  //Windy Movement Probability
-
-	for (int i = 0; i < (int)maze.size(); ++i)
-		for (int j = 0; j < (int)maze[0].size(); ++j) {
+	//2. Moving north-ward  //Windy Movement Probability Prediction
+	predictionMaze = maze;
+	for (int i = 0; i < rows; ++i)
+		for (int j = 0; j < columns; ++j) {
 			float prob;
-			for (int k = 0; k < 4; ++k) {
-				int new_x = j + moves[i].x, new_y = i + moves[i].y;
-				//Direction d = Direction::North.Left();
-				//vector<float> transitionProb = getTransitionProb(Direction::North);
-				if (!inside(new_x, new_y, xBound, yBound))
-					prob += maze[i][j].label /* * transition_prob(to neighbor) */;
+			for (int k = 0; k < directions; ++k) {
+				int new_row = i + moves[k].row, new_col = j + moves[k].col;
+				vector<float> transitionProb = getTransitionProb(Direction::North);
+
+				if (!inside(new_row, new_col, rows, columns))
+					prob += predictionMaze[i][j].label * transitionProb[k];
 				else
-					prob += maze[new_y][new_x].label /* * transition_prob(to neighbor) */;
+					prob += predictionMaze[new_row][new_col].label * transitionProb[k];
 			}
-			maze[i][j].label *= prob;
+			predictionMaze[i][j].label *= prob;
 		}
+	cout << "Prediction after attempting to move North" << endl;
+	print(predictionMaze);
 	/*
 	    //3. Sensing: [1,0,0,0] //Filtering after Evidence
 	    sensory = {false, true, true, true};
 
-	    //4. Moving north-ward  //Windy Movement Probability
+	    //4. Moving north-ward  //Windy Movement Probability Prediction
 	    movedDirection = windyMove(Direction::North);
 
 	    //5. Sensing: [1,1,0,0] //Filtering after Evidence
 	    sensory = {false, false, true, true};
 
-	    //6. Moving east-ward   //Windy Movement Probability
+	    //6. Moving east-ward   //Windy Movement Probability Prediction
 	    movedDirection = windyMove(Direction::East);
 
 	    //7. Sensing: [0,1,1,0] //Filtering after Evidence
@@ -147,40 +147,39 @@ float computePresence(float cellProbability, vector<bool> reality, vector<bool> 
 	return cellProbability;
 }
 
-vector<bool> getReality(vector<vector<Cell>>& maze, int x, int y) {
+vector<bool> getReality(vector<vector<Cell>>& maze, int row, int col, int maxRow, int maxCol) {
 	vector<bool> reality(4);
-	int yBound = maze.size(), xBound = maze[0].size();
 	for (int i = 0; i < (int)reality.size(); i++) {
-		int new_x = x + moves[i].x, new_y = y + moves[i].y;
-		if (!inside(new_x, new_y, xBound, yBound))
+		int new_row = row + moves[i].row, new_col = col + moves[i].col;
+		if (!inside(new_row, col, maxRow, maxCol))
 			reality[i] = true;
 		else
-			reality[i] = (maze[new_y][new_x].type == CellType::Wall);
+			reality[i] = (maze[new_row][new_col].type == CellType::Wall);
 	}
 	return reality;
 }
 
 vector<float> getTransitionProb(Direction dir) {
-	vector<float> directionProb;
+	vector<float> directionProb(4);
 	directionProb[dir.Value()] = 0.7;
 	directionProb[dir.Left().Value()] = 0.2;
 	directionProb[dir.Right().Value()] = 0.1;
 	directionProb[dir.Opposite().Value()] = 0.0;
 	return directionProb;
-	/*vector<vector<float>> directionProb = {
+	/*  vector<vector<float>> directionProb = {
 		{0.7, 0.1, 0, 0.2},
 		{0.2, 0.7, 0.1, 0},
 		{0, 0.2, 0.7, 0.1},
 		{0.0, 0, 0.2, 0.7}
-	};
+	    };
 
-	if (dir == Direction::North)
+	    if (dir == Direction::North)
 		return directionProb[1];
-	else if (dir == Direction::East)
+	    else if (dir == Direction::East)
 		return directionProb[2];
-	else if (dir == Direction::South)
+	    else if (dir == Direction::South)
 		return directionProb[3];
-	else
+	    else
 		return directionProb[0];*/
 }
 
