@@ -4,6 +4,11 @@
 
 using namespace std;
 
+struct Position {
+	int x;
+	int y;
+};
+
 enum class CellType { Path, Wall, Start, Goal };
 struct Cell {
 	CellType type;
@@ -35,4 +40,13 @@ int countType(CellType type, const vector<vector<Cell>>& arr) {
 			if (arr[i][j].type == type)
 				counter++;
 	return counter;
+}
+
+Position locate(CellType type, const vector<vector<Cell>>& arr) {
+	for (int i = 0; i < (int)arr.size(); ++i)
+		for (int j = 0; j < (int)arr[0].size(); ++j)
+			if (arr[i][j].type == type)
+				return Position{i, j};
+	// Could throw here if not found
+	return Position{-1, -1};
 }

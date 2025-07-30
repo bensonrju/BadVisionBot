@@ -10,10 +10,6 @@
 using namespace std;
 
 
-struct Position {
-	int x;
-	int y;
-};
 
 const float straightProb = 0.7;
 const float LeftProb = 0.2;
@@ -25,15 +21,6 @@ const float sensingWall = 0.95;
 
 bool inside(int x, int y, int max_x, int max_y) {
 	return (x >= 0 && x < max_x && y >= 0 && y < max_y);
-}
-
-Position locate(CellType type, const vector<vector<Cell>>& arr) {
-	for (int i = 0; i < (int)arr.size(); ++i)
-		for (int j = 0; j < (int)arr[0].size(); ++j)
-			if (arr[i][j].type == type)
-				return Position{i, j};
-	// Could throw here if not found
-	return Position{-1, -1};
 }
 
 void execute(vector<vector<Cell>>& maze, Position goal);
@@ -51,6 +38,7 @@ int main() {
 	print(maze);
 	//Position start = locate(CellType::Start, maze);
 	Position goal = locate(CellType::Goal, maze);
+	cout << "Goal: " << goal.x << ",  " << goal.y << endl;
 	execute(maze, goal);
 	cout << Direction::East.Left() << endl;
 	return 0;
