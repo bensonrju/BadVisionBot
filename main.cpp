@@ -45,25 +45,6 @@ int main() {
 	//cout << Direction::East.Left() << endl;
 	return 0;
 }
-/*
-    vector<bool> sensing(vector<bool>& sensed) {
-	int size = (int)sensed.size();
-	vector<bool> actuallySensed(size);
-	int chance;
-
-	for (int i = 0; i < size; ++i) {
-		chance = (rand() % 100) + 1; // 1 to 100
-		bool evaluated = sensed[i] ? chance <= (1 - sensingPath) * 100 : chance <= (1 - sensingWall) * 100;
-
-		if (evaluated)
-			actuallySensed[i] = !sensed[i];
-		else
-			actuallySensed[i] = sensed[i];
-	}
-
-	return actuallySensed;
-    }
-*/
 
 vector<Position> moves = {
 	//  col, row
@@ -92,42 +73,38 @@ float computePresence(float cellProbability, vector<bool> reality, vector<bool> 
 	if (length != (int)sensory.size())
 		return -1;
 
+	/* =====+===== Posterior Calculation =====+===== */
+
 	for (int i = 0; i < length; ++i) {
 		float probability;
-		if (reality[i])
-			probability = sensory[i] ? sensingWall : sensingWallMisid;
-		else
-			probability = sensory[i] ? sensingPathMisid : sensingPath;
+		if (reality[i]) {	// Assuming S=(x, y)
+			if(sensory[i]) 	// P( Zi=  w | R=  w ) = 0.95
+				probability = sensingWall;
+			else			// P( Zi= ~w | R=  w ) = 0.05
+				probability = sensingPathMisid;
+		}
+		else {
+			if(!sensory[i]) // P( Zi= ~w | R= ~w ) = 0.85
+				probability = sensingPath;
+			else			// P( Zi=  w | R= ~w ) = 0.15
+				probability = sensingPathMisid;
+		}
 
 		cellProbability *= probability;
 	}
 	return cellProbability;
 }
 
-vector<float> transitionProb(Direction::Directions dir) {
+vector<float> transitionProb(Direction dir) {
 	vector<vector<float>> directionProb = {
-		{0.7, 0.1, 0, 0.2},
-		{0.2, 0.7, 0.1, 0},
-		{0, 0.2, 0.7, 0.1},
-		{0.0, 0, 0.2, 0.7}
+		{0.7, 0.1, 0, 0.2},	// West
+		{0.2, 0.7, 0.1, 0},	// North
+		{0, 0.2, 0.7, 0.1},	// East
+		{0.0, 0, 0.2, 0.7}	// South
 	};
-	switch (dir) {
-		case Direction::Directions::West:
-			break;
-
-		default:
-			break;
-	}
-
-	if (dir == Direction::Directions::West)
-		return directionProb[0];
-	if (dir == Direction::Directions::North)
-		return directionProb[1];
-	if (dir == Direction::Directions::West)
-		return directionProb[0];
-	if (dir == Direction::Directions::West)
-		return directionProb[0];
+	return directionProb[dir];
 }
+
 
 void execute(vector<vector<Cell>>& maze, Position goal) {
 	int yBound = maze.size(), xBound = maze[0].size();
