@@ -137,10 +137,15 @@ float computePresence(float cellProbability, vector<bool> reality, vector<bool> 
 
 	for (int i = 0; i < length; ++i) {
 		float probability;
-		if (reality[i])
-			probability = sensory[i] ? sensingWall : sensingWallMisid;
+        /* =====+===== Posterior Calculation =====+===== */
+		if (reality[i]) // Assuming S=(x, y)
+			probability = sensory[i]
+						  ? /* P(Zi = w| R = w) = 0.95 */ sensingWall
+						  : /* P(Zi = ~w| R = w) = 0.05 */ sensingWallMisid;
 		else
-			probability = sensory[i] ? sensingPathMisid : sensingPath;
+			probability = sensory[i]
+						  ? /* P( Zi= ~w | R= ~w ) = 0.85 */ sensingPathMisid
+						  : /* P( Zi=  w | R= ~w ) = 0.15 */ sensingPath;
 
 		cellProbability *= probability;
 	}

@@ -22,22 +22,6 @@ struct Direction {
     int Value() const {
         return (int)value;
     }
-	/*
-	static Direction North() {
-		return Direction(North);
-	}
-
-	static Direction East()  {
-		return Direction(East);
-	}
-
-	static Direction South() {
-		return Direction(South);
-	}
-
-	static Direction West()  {
-		return Direction(West);
-	}*/
 
 	Direction Right() const {
 		// (value + 1) % 4 is one step clockwise (right turn)
