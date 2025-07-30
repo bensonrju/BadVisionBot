@@ -56,24 +56,6 @@ int main() {
 	return 0;
 }
 
-/*
-Direction windyMove(Direction intendedDirection) {
-	int chance = (rand() % 100) + 1; // 1 to 100
-
-	// 70% to move intended direction
-	if (chance <= 70)
-		return intendedDirection;
-
-	// 20% to move left of intended direction
-	else if (chance <= 90)
-		return intendedDirection.Left();
-
-	// 10% to move right of intended direction
-	else
-		return intendedDirection.Right();
-}
-		*/
-
 vector<bool> sensing(vector<bool>& sensed) {
 	int size = (int)sensed.size();
 	vector<bool> actuallySensed(size);
