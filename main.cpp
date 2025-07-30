@@ -37,7 +37,7 @@ int main() {
 
 	print(maze);
 	Position goal = locate(CellType::Goal, maze);
-	cout << "Goal: " << goal.x << ",  " << goal.y << endl;
+	//cout << "Goal: " << goal.x << ",  " << goal.y << endl;
 
 	execute(maze, goal);
 	//cout << Direction::East.Left() << endl;
