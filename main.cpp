@@ -44,7 +44,7 @@ int main() {
 	return 0;
 }
 /*
-vector<bool> sensing(vector<bool>& sensed) {
+    vector<bool> sensing(vector<bool>& sensed) {
 	int size = (int)sensed.size();
 	vector<bool> actuallySensed(size);
 	int chance;
@@ -60,30 +60,51 @@ vector<bool> sensing(vector<bool>& sensed) {
 	}
 
 	return actuallySensed;
-}
-*/
-float computePresence(float cellProbability, vector<bool> reality, vector<bool> sensory) {
-    int length = (int)reality.size();
-    if (length != (int)sensory.size())
-        return -1;
-
-    for (int i = 0; i < length; ++i) {
-        float probability;
-        if (reality[i] == sensory[i]) {
-            if (reality[i])
-                probability = sensingPath;
-            else
-                probability = sensingWall;
-        }
-        else
-            if (reality[i])
-                probability = (1 - sensingPath);
-            else
-                probability = (1 - sensingWall);
-
-        cellProbability *= probability;
     }
-    return cellProbability;
+*/
+
+vector<Position> moves = {
+	{0,	-1},    // West
+	{-1, 0},    // North
+	{0,	1},     // East
+	{1,	0},     // South
+};
+
+vector<bool> getReality(vector<vector<Cell>>& maze, int x, int y) {
+	vector<bool> reality(4);
+	int yBound = maze.size(), xBound = maze[0].size();
+	for (int i = 0; i < (int)reality.size(); i++) {
+		int new_x = x + moves[i].x, new_y = y + moves[i].y;
+		if (!inside(new_x, new_y, xBound, yBound)) {
+			reality[i] = false;
+			continue;
+		}
+		maze[new_x][new_y].type == CellType::Wall ? reality[i] = false : reality[i] = false;
+	}
+	return reality;
+}
+
+float computePresence(float cellProbability, vector<bool> reality, vector<bool> sensory) {
+	int length = (int)reality.size();
+	if (length != (int)sensory.size())
+		return -1;
+
+	for (int i = 0; i < length; ++i) {
+		float probability;
+		if (reality[i] == sensory[i]) {
+			if (reality[i])
+				probability = sensingPath;
+			else
+				probability = sensingWall;
+		}
+		else if (reality[i])
+			probability = (1 - sensingPath);
+		else
+			probability = (1 - sensingWall);
+
+		cellProbability *= probability;
+	}
+	return cellProbability;
 }
 
 void execute(vector<vector<Cell>>& maze, Position goal) {
@@ -101,49 +122,49 @@ void execute(vector<vector<Cell>>& maze, Position goal) {
 		for (int j = 0; j < (int)maze[0].size(); ++j)
 			if (maze[i][j].type != CellType::Wall)
 				maze[i][j].label = prob;
-    cout << "Initial Location Probabilities" << endl;
-    print(maze);
+	cout << "Initial Location Probabilities" << endl;
+	print(maze);
 
-    //1. Sensing: [0,0,0,1] //Filtering after Evidence
-    sensory = {true, true, true, false};
-    float sum = 0;
-    for (int i = 0; i < (int)maze.size(); ++i)
-        for (int j = 0; j < (int)maze[0].size(); ++j)
-            if (maze[i][j].type != CellType::Wall) {
-                float nonNormalized = computePresence(maze[i][j].label, reality, sensory);
-                sum += nonNormalized;
-                maze[i][j].label = nonNormalized;
-            }
+	//1. Sensing: [0,0,0,1] //Filtering after Evidence
+	sensory = {true, true, true, false};
+	float sum = 0;
+	for (int i = 0; i < (int)maze.size(); ++i)
+		for (int j = 0; j < (int)maze[0].size(); ++j)
+			if (maze[i][j].type != CellType::Wall) {
+				float nonNormalized = computePresence(maze[i][j].label, getReality(maze, j, i), sensory);
+				sum += nonNormalized;
+				maze[i][j].label = nonNormalized;
+			}
 
-    for (int i = 0; i < (int)maze.size(); ++i)
-        for (int j = 0; j < (int)maze[0].size(); ++j)
-            if (maze[i][j].type != CellType::Wall) {
-                float nonNormalized = maze[i][j].label;
-                maze[i][j].label = nonNormalized / sum;
-            }
+	for (int i = 0; i < (int)maze.size(); ++i)
+		for (int j = 0; j < (int)maze[0].size(); ++j)
+			if (maze[i][j].type != CellType::Wall) {
+				float nonNormalized = maze[i][j].label;
+				maze[i][j].label = nonNormalized / sum;
+			}
 
-    cout << "Filtering after Evidence [0, 0, 0, 1]" << endl;
-    print(maze);
-    return;
-    /*
-    //2. Moving north-ward  //Windy Movement Probability
-    movedDirection = windyMove(Direction::North);
+	cout << "Filtering after Evidence [0, 0, 0, 1]" << endl;
+	print(maze);
+	return;
+	/*
+	    //2. Moving north-ward  //Windy Movement Probability
+	    movedDirection = windyMove(Direction::North);
 
-    //3. Sensing: [1,0,0,0] //Filtering after Evidence
-    sensory = {false, true, true, true};
+	    //3. Sensing: [1,0,0,0] //Filtering after Evidence
+	    sensory = {false, true, true, true};
 
-    //4. Moving north-ward  //Windy Movement Probability
-    movedDirection = windyMove(Direction::North);
+	    //4. Moving north-ward  //Windy Movement Probability
+	    movedDirection = windyMove(Direction::North);
 
-    //5. Sensing: [1,1,0,0] //Filtering after Evidence
-    sensory = {false, false, true, true};
+	    //5. Sensing: [1,1,0,0] //Filtering after Evidence
+	    sensory = {false, false, true, true};
 
-    //6. Moving east-ward   //Windy Movement Probability
-    movedDirection = windyMove(Direction::East);
+	    //6. Moving east-ward   //Windy Movement Probability
+	    movedDirection = windyMove(Direction::East);
 
-    //7. Sensing: [0,1,1,0] //Filtering after Evidence
-    sensory = {true, false, false, true};
-    */
+	    //7. Sensing: [0,1,1,0] //Filtering after Evidence
+	    sensory = {true, false, false, true};
+	*/
 }
 
 void print(const vector<vector<Cell>>& maze) {
@@ -160,5 +181,5 @@ void print(const vector<vector<Cell>>& maze) {
 		}
 		cout << endl;
 	}
-    cout << endl;
+	cout << endl;
 }

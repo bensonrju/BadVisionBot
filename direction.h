@@ -1,8 +1,6 @@
 #pragma once
 #include <iostream>
 
-enum {PATH, WALL};
-
 struct Direction {
 	enum class Directions { North, East, South, West };
 	Directions value;
