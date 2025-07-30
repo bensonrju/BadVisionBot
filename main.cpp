@@ -62,12 +62,11 @@ vector<bool> sensing(vector<bool>& sensed) {
 	return actuallySensed;
 }
 */
-float computePresence(float prev, vector<bool> reality, vector<bool> sensory) {
+float computePresence(float cellProbability, vector<bool> reality, vector<bool> sensory) {
     int length = (int)reality.size();
     if (length != (int)sensory.size())
         return -1;
 
-    float cellProbability = 0;
     for (int i = 0; i < length; ++i) {
         float probability;
         if (reality[i] == sensory[i]) {
@@ -82,12 +81,9 @@ float computePresence(float prev, vector<bool> reality, vector<bool> sensory) {
             else
                 probability = (1 - sensingWall);
 
-        if (cellProbability == 0)
-            cellProbability = probability;
-        else
-            cellProbability *= probability;
+        cellProbability *= probability;
     }
-    return cellProbability * prev;
+    return cellProbability;
 }
 
 void execute(vector<vector<Cell>>& maze, Position goal) {
