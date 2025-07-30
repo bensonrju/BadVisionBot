@@ -2,20 +2,56 @@
 #include <iostream>
 
 struct Direction {
-	enum class Directions { North, East, South, West };
-	Directions value;
+	enum class Directions { West = 0, North, East, South };
 
+	// Provide a default value to prevent uninitialized 'value'
+	constexpr Direction() : value(West) {}
 	constexpr Direction(Directions v) : value(v) {}
-	Direction() {}
 
-	Direction Left() const {
-		// Cast value to int, add 3, mod 4, cast back to Direction
-		return Direction((Directions)(((int)value + 3) % 4));
+	//explicit operator bool() const = delete;
+
+	// Allows comparisons with Enumerator constants.
+	constexpr operator Directions() const {
+		return value;
 	}
+
+	Directions getDirection() const {
+        return value;
+	}
+
+    int Value() const {
+        return (int)value;
+    }
+	/*
+	static Direction North() {
+		return Direction(North);
+	}
+
+	static Direction East()  {
+		return Direction(East);
+	}
+
+	static Direction South() {
+		return Direction(South);
+	}
+
+	static Direction West()  {
+		return Direction(West);
+	}*/
 
 	Direction Right() const {
 		// (value + 1) % 4 is one step clockwise (right turn)
 		return Direction((Directions)(((int)value + 1) % 4));
+	}
+
+	Direction Opposite() const {
+		// (value + 2) % 4 is backwards (opposite)
+		return Direction((Directions)(((int)value + 2) % 4));
+	}
+
+	Direction Left() const {
+		// (value + 3) % 4 is one step counter-clockwise (left turn)
+		return Direction((Directions)(((int)value + 3) % 4));
 	}
 
 	// Optional: helper for output
@@ -38,6 +74,9 @@ struct Direction {
 	static const Direction East;
 	static const Direction South;
 	static const Direction West;
+
+  private:
+	Directions value;
 };
 
 inline constexpr Direction Direction::North{Direction::Directions::North};
@@ -48,20 +87,3 @@ inline constexpr Direction Direction::West{Direction::Directions::West};
 inline std::ostream& operator<<(std::ostream& os, const Direction& d) {
 	return os << d.ToString();
 }
-/*
-    Direction windyMove(Direction intendedDirection) {
-	int chance = (rand() % 100) + 1; // 1 to 100
-
-	// 70% to move intended direction
-	if (chance <= 70)
-		return intendedDirection;
-
-	// 20% to move left of intended direction
-	else if (chance <= 90)
-		return intendedDirection.Left();
-
-	// 10% to move right of intended direction
-	else
-		return intendedDirection.Right();
-    }
-*/

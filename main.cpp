@@ -22,9 +22,19 @@ bool inside(int x, int y, int max_x, int max_y) {
 	return (x >= 0 && x < max_x && y >= 0 && y < max_y);
 }
 
-vector<bool> sensing(vector<bool>& sensed);
+vector<Position> moves = {
+	//  col, row
+	//   x,  y
+	{-1,  0},   // West
+	{ 0, -1},   // North
+	{ 1,  0},   // East
+	{ 0,  1}    // South
+};
+
 void execute(vector<vector<Cell>>& maze, Position goal);
 float computePresence(float prev, vector<bool> reality, vector<bool> sensory);
+vector<bool> getReality(vector<vector<Cell>>& maze, int x, int y);
+vector<float> getTransitionProb(Direction dir);
 void print(const vector<vector<Cell>>& maze);
 
 int main() {
@@ -42,91 +52,8 @@ int main() {
 	//cout << "Goal: " << goal.x << ",  " << goal.y << endl;
 
 	execute(maze, goal);
-	//cout << Direction::East.Left() << endl;
+	//cout << Direction::East.Left().Value() << endl;
 	return 0;
-}
-/*
-    vector<bool> sensing(vector<bool>& sensed) {
-	int size = (int)sensed.size();
-	vector<bool> actuallySensed(size);
-	int chance;
-
-	for (int i = 0; i < size; ++i) {
-		chance = (rand() % 100) + 1; // 1 to 100
-		bool evaluated = sensed[i] ? chance <= (1 - sensingPath) * 100 : chance <= (1 - sensingWall) * 100;
-
-		if (evaluated)
-			actuallySensed[i] = !sensed[i];
-		else
-			actuallySensed[i] = sensed[i];
-	}
-
-	return actuallySensed;
-    }
-*/
-
-vector<Position> moves = {
-	//  col, row
-	//   x,  y
-	{-1,  0},   // West
-	{ 0, -1},   // North
-	{ 1,  0},   // East
-	{ 0,  1}    // South
-};
-
-vector<bool> getReality(vector<vector<Cell>>& maze, int x, int y) {
-	vector<bool> reality(4);
-	int yBound = maze.size(), xBound = maze[0].size();
-	for (int i = 0; i < (int)reality.size(); i++) {
-		int new_x = x + moves[i].x, new_y = y + moves[i].y;
-		if (!inside(new_x, new_y, xBound, yBound))
-			reality[i] = true;
-		else
-			reality[i] = (maze[new_y][new_x].type == CellType::Wall);
-	}
-	return reality;
-}
-
-float computePresence(float cellProbability, vector<bool> reality, vector<bool> sensory) {
-	int length = (int)reality.size();
-	if (length != (int)sensory.size())
-		return -1;
-
-	for (int i = 0; i < length; ++i) {
-		float probability;
-		if (reality[i])
-			probability = sensory[i] ? sensingWall : sensingWallMisid;
-		else
-			probability = sensory[i] ? sensingPathMisid : sensingPath;
-
-		cellProbability *= probability;
-	}
-	return cellProbability;
-}
-
-vector<float> transitionProb(Direction::Directions dir) {
-	vector<vector<float>> directionProb = {
-		{0.7, 0.1, 0, 0.2},
-		{0.2, 0.7, 0.1, 0},
-		{0, 0.2, 0.7, 0.1},
-		{0.0, 0, 0.2, 0.7}
-	};
-	switch (dir) {
-		case Direction::Directions::West:
-			break;
-
-		default:
-			break;
-	}
-
-	if (dir == Direction::Directions::West)
-		return directionProb[0];
-	if (dir == Direction::Directions::North)
-		return directionProb[1];
-	if (dir == Direction::Directions::West)
-		return directionProb[0];
-	if (dir == Direction::Directions::West)
-		return directionProb[0];
 }
 
 void execute(vector<vector<Cell>>& maze, Position goal) {
@@ -137,7 +64,6 @@ void execute(vector<vector<Cell>>& maze, Position goal) {
 	//false/0: path
 	//true/1: wall
 
-	Direction movedDirection;
 	vector<bool> sensory(4);
 	//0. Get Initial Location Probabilities
 	float prob = 1.0 / (countType(CellType::Path, maze) + 1);
@@ -171,11 +97,14 @@ void execute(vector<vector<Cell>>& maze, Position goal) {
 	return;
 
 	//2. Moving north-ward  //Windy Movement Probability
+
 	for (int i = 0; i < (int)maze.size(); ++i)
 		for (int j = 0; j < (int)maze[0].size(); ++j) {
 			float prob;
 			for (int k = 0; k < 4; ++k) {
 				int new_x = j + moves[i].x, new_y = i + moves[i].y;
+				//Direction d = Direction::North.Left();
+				//vector<float> transitionProb = getTransitionProb(Direction::North);
 				if (!inside(new_x, new_y, xBound, yBound))
 					prob += maze[i][j].label /* * transition_prob(to neighbor) */;
 				else
@@ -199,6 +128,60 @@ void execute(vector<vector<Cell>>& maze, Position goal) {
 	    //7. Sensing: [0,1,1,0] //Filtering after Evidence
 	    sensory = {true, false, false, true};
 	*/
+}
+
+float computePresence(float cellProbability, vector<bool> reality, vector<bool> sensory) {
+	int length = (int)reality.size();
+	if (length != (int)sensory.size())
+		return -1;
+
+	for (int i = 0; i < length; ++i) {
+		float probability;
+		if (reality[i])
+			probability = sensory[i] ? sensingWall : sensingWallMisid;
+		else
+			probability = sensory[i] ? sensingPathMisid : sensingPath;
+
+		cellProbability *= probability;
+	}
+	return cellProbability;
+}
+
+vector<bool> getReality(vector<vector<Cell>>& maze, int x, int y) {
+	vector<bool> reality(4);
+	int yBound = maze.size(), xBound = maze[0].size();
+	for (int i = 0; i < (int)reality.size(); i++) {
+		int new_x = x + moves[i].x, new_y = y + moves[i].y;
+		if (!inside(new_x, new_y, xBound, yBound))
+			reality[i] = true;
+		else
+			reality[i] = (maze[new_y][new_x].type == CellType::Wall);
+	}
+	return reality;
+}
+
+vector<float> getTransitionProb(Direction dir) {
+	vector<float> directionProb;
+	directionProb[dir.Value()] = 0.7;
+	directionProb[dir.Left().Value()] = 0.2;
+	directionProb[dir.Right().Value()] = 0.1;
+	directionProb[dir.Opposite().Value()] = 0.0;
+	return directionProb;
+	/*vector<vector<float>> directionProb = {
+		{0.7, 0.1, 0, 0.2},
+		{0.2, 0.7, 0.1, 0},
+		{0, 0.2, 0.7, 0.1},
+		{0.0, 0, 0.2, 0.7}
+	};
+
+	if (dir == Direction::North)
+		return directionProb[1];
+	else if (dir == Direction::East)
+		return directionProb[2];
+	else if (dir == Direction::South)
+		return directionProb[3];
+	else
+		return directionProb[0];*/
 }
 
 void print(const vector<vector<Cell>>& maze) {
