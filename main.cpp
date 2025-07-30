@@ -79,7 +79,8 @@ vector<bool> getReality(vector<vector<Cell>>& maze, int x, int y) {
 			reality[i] = false;
 			continue;
 		}
-		maze[new_x][new_y].type == CellType::Wall ? reality[i] = false : reality[i] = false;
+        reality[i] = (maze[new_y][new_x].type != CellType::Wall);
+		//maze[new_y][new_x].type == CellType::Wall ? reality[i] = false : reality[i] = true;
 	}
 	return reality;
 }
