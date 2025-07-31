@@ -9,6 +9,8 @@
 
 using namespace std;
 
+
+
 const float straightProb = 0.7;
 const float LeftProb = 0.2;
 const float RightProb = 0.1;
@@ -29,6 +31,9 @@ vector<Position> moves = {
 	{ 1,  0}    // South
 };
 
+void sensing(vector<vector<Cell>>& maze, int rows, int columns, vector<bool> sensory);
+inline void printSensory(vector<bool> sensory);
+inline void printMovement(Direction dir);
 void execute(vector<vector<Cell>>& maze, Position goal);
 float computePresence(float prev, vector<bool> reality, vector<bool> sensory);
 vector<bool> getReality(vector<vector<Cell>>& maze, int row, int col, int maxRow, int maxCol);
@@ -54,6 +59,53 @@ int main() {
 	return 0;
 }
 
+void sensing(vector<vector<Cell>>& maze, int rows, int columns, vector<bool> sensory) {
+	float sum = 0;
+    for (int i = 0; i < rows; ++i)
+        for (int j = 0; j < columns; ++j)
+            if (maze[i][j].type != CellType::Wall) {
+                float nonNormalized = computePresence(maze[i][j].label, getReality(maze, i, j, rows, columns), sensory);
+                sum += nonNormalized;
+                maze[i][j].label = nonNormalized;
+            }
+    for (int i = 0; i < rows; ++i)
+        for (int j = 0; j < columns; ++j)
+            if (maze[i][j].type != CellType::Wall) {
+                float nonNormalized = maze[i][j].label;
+                maze[i][j].label = nonNormalized / sum;
+            }
+    printSensory(sensory);
+	print(maze);
+}
+
+void movingProb(vector<vector<Cell>>& maze, int rows, int columns, Direction direction, int directions) {
+    vector<vector<Cell>> predictionMaze = maze;
+    for (int i = 0; i < rows; ++i)
+        for (int j = 0; j < columns; ++j)
+            predictionMaze[i][j].label = 0.0;
+
+        vector<float> transitionProb = getTransitionProb(direction);
+    for (int i = 0; i < rows; ++i) {
+        for (int j = 0; j < columns; ++j) {
+            if (maze[i][j].type == CellType::Wall)
+                continue;
+
+            for (int k = 0; k < directions; ++k) {
+                int newi = i + moves[k].row, newj = j + moves[k].col;
+                float prob = transitionProb[k] * maze[i][j].label;
+
+                if (!inside(newi, newj, rows, columns) || maze[newi][newj].type == CellType::Wall)
+                    predictionMaze[i][j].label += prob;     // Probability of bouncing is added to the initial/current cell
+                else
+                    predictionMaze[newi][newj].label += prob; // Probability of moving to neighboring cell is added to the neighboring cell
+            }
+        }
+    }
+	printMovement(direction);
+    print(predictionMaze);
+	maze = predictionMaze;
+}
+
 void execute(vector<vector<Cell>>& maze, Position goal) {
 	int rows = maze.size(), columns = maze[0].size(), directions = moves.size();
 	//return;
@@ -65,6 +117,7 @@ void execute(vector<vector<Cell>>& maze, Position goal) {
 	vector<bool> sensory(4);
 	vector<vector<Cell>> predictionMaze;
 	//0. Get Initial Location Probabilities
+	// S1 Prior Probability
 	float prob = 1.0 / (countType(CellType::Path, maze) + 1);
 	for (int i = 0; i < rows; ++i)
 		for (int j = 0; j < columns; ++j)
@@ -74,60 +127,45 @@ void execute(vector<vector<Cell>>& maze, Position goal) {
 	print(maze);
 
 	//1. Sensing: [0,0,0,1] //Filtering after Evidence
+	// S1 Posterior Probability
 	sensory = {false, false, false, true};
-	float sum = 0;
-	for (int i = 0; i < rows; ++i)
-		for (int j = 0; j < columns; ++j)
-			if (maze[i][j].type != CellType::Wall) {
-				float nonNormalized = computePresence(maze[i][j].label, getReality(maze, i, j, rows, columns), sensory);
-				sum += nonNormalized;
-				maze[i][j].label = nonNormalized;
-			}
+	sensing(maze, rows, columns, sensory);
 
-	for (int i = 0; i < rows; ++i)
-		for (int j = 0; j < columns; ++j)
-			if (maze[i][j].type != CellType::Wall) {
-				float nonNormalized = maze[i][j].label;
-				maze[i][j].label = nonNormalized / sum;
-			}
-
-	cout << "Filtering after Evidence [0, 0, 0, 1]" << endl;
-	print(maze);
-
+	
 	//2. Moving north-ward  //Windy Movement Probability Prediction
-	predictionMaze = maze;
-	for (int i = 0; i < rows; ++i)
-		for (int j = 0; j < columns; ++j) {
-			float prob;
-			for (int k = 0; k < directions; ++k) {
-				int new_row = i + moves[k].row, new_col = j + moves[k].col;
-				vector<float> transitionProb = getTransitionProb(Direction::North);
+	// S2 Prior Probability
+	movingProb(maze, rows, columns, Direction::North, directions);
 
-				if (!inside(new_row, new_col, rows, columns))
-					prob += predictionMaze[i][j].label * transitionProb[k];
-				else
-					prob += predictionMaze[new_row][new_col].label * transitionProb[k];
-			}
-			predictionMaze[i][j].label *= prob;
-		}
-	cout << "Prediction after attempting to move North" << endl;
-	print(predictionMaze);
-	/*
-	    //3. Sensing: [1,0,0,0] //Filtering after Evidence
-	    sensory = {false, true, true, true};
+	
+	//3. Sensing: [1,0,0,0] //Filtering after Evidence
+	sensory = {true, false, false, false};
+	sensing(maze, rows, columns, sensory);
 
-	    //4. Moving north-ward  //Windy Movement Probability Prediction
-	    movedDirection = windyMove(Direction::North);
+	//4. Moving north-ward  //Windy Movement Probability Prediction
+	movingProb(maze, rows, columns, Direction::North, directions);
 
-	    //5. Sensing: [1,1,0,0] //Filtering after Evidence
-	    sensory = {false, false, true, true};
+	//5. Sensing: [1,1,0,0] //Filtering after Evidence
+	sensory = {true, true, false, false};
+	sensing(maze, rows, columns, sensory);
 
-	    //6. Moving east-ward   //Windy Movement Probability Prediction
-	    movedDirection = windyMove(Direction::East);
+	//6. Moving east-ward   //Windy Movement Probability Prediction
+	movingProb(maze, rows, columns, Direction::East, directions);
 
-	    //7. Sensing: [0,1,1,0] //Filtering after Evidence
-	    sensory = {true, false, false, true};
-	*/
+	//7. Sensing: [0,1,1,0] //Filtering after Evidence
+	sensory = {false, true, true, false};
+	sensing(maze, rows, columns, sensory);
+	
+}
+
+inline void printSensory(vector<bool> sensory) {
+		cout << "Filtering after Evidence [" 
+			 << sensory[0] << ", " << sensory[1] << ", " 
+			 << sensory[2] << ", " << sensory[3] << "]" << endl;
+}
+
+inline void printMovement(Direction dir) {
+	cout << "Prediction after attempting to move "
+		 << dir << endl;
 }
 
 float computePresence(float cellProbability, vector<bool> reality, vector<bool> sensory) {
@@ -156,11 +194,13 @@ vector<bool> getReality(vector<vector<Cell>>& maze, int row, int col, int maxRow
 	vector<bool> reality(4);
 	for (int i = 0; i < (int)reality.size(); i++) {
 		int new_row = row + moves[i].row, new_col = col + moves[i].col;
-		if (!inside(new_row, col, maxRow, maxCol))
+		if (!inside(new_row, new_col, maxRow, maxCol))
 			reality[i] = true;
 		else
 			reality[i] = (maze[new_row][new_col].type == CellType::Wall);
 	}
+	/*cout << "Reality for row(" << row << ")  col(" << col << "): "
+		 << reality[0] << ", " << reality[1] << ", " << reality[2] << ", " << reality[3] << endl; */
 	return reality;
 }
 
