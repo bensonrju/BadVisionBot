@@ -62,12 +62,6 @@ void execute(vector<vector<Cell>>& maze) {
 
 	initProb(maze);
 
-	/*
-	float prob = 1.0 / (countType(CellType::Path, maze) + 1);
-	for (int i = 0; i < rows; ++i)
-		for (int j = 0; j < columns; ++j)
-			if (maze[i][j].type != CellType::Wall)
-				maze[i][j].label = prob;	*/
 	cout << "Initial Location Probabilities" << endl;
 	print(maze);
 
