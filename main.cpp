@@ -32,8 +32,8 @@ vector<bool> getReality(vector<vector<Cell>>& maze, int row, int col, int maxRow
 float computePresence(float prev, vector<bool> reality, vector<bool> sensory);
 inline void printSensory(vector<bool> sensory);
 
-void movingProb(vector<vector<Cell>>& maze, int rows, int columns, Direction direction, int directions);
-vector<float> getTransitionProb(Direction dir);
+void movingProb(vector<vector<Cell>>& maze, int rows, int columns, Direction direction);
+//vector<float> getTransitionProb(Direction dir);
 inline void printMovement(Direction dir);
 
 //void print(const vector<vector<Cell>>& maze);
@@ -79,21 +79,21 @@ void execute(vector<vector<Cell>>& maze, Position goal) {
 
 	//2. Moving north-ward  //Windy Movement Probability Prediction
 	// S2 Prior Probability
-	movingProb(maze, rows, columns, Direction::North, directions);
+	movingProb(maze, rows, columns, Direction::North);
 
 	//3. Sensing: [1, 0, 0, 0] //Filtering after Evidence
 	sensory = {true, false, false, false};
 	sensing(maze, rows, columns, sensory);
 
 	//4. Moving north-ward  //Windy Movement Probability Prediction
-	movingProb(maze, rows, columns, Direction::North, directions);
+	movingProb(maze, rows, columns, Direction::North);
 
 	//5. Sensing: [1, 1, 0, 0] //Filtering after Evidence
 	sensory = {true, true, false, false};
 	sensing(maze, rows, columns, sensory);
 
 	//6. Moving east-ward   //Windy Movement Probability Prediction
-	movingProb(maze, rows, columns, Direction::East, directions);
+	movingProb(maze, rows, columns, Direction::East);
 
 	//7. Sensing: [0, 1, 1, 0] //Filtering after Evidence
 	sensory = {false, true, true, false};
@@ -161,7 +161,7 @@ inline void printSensory(vector<bool> sensory) {
 		 << sensory[2] << ", " << sensory[3] << "]" << endl;
 }
 
-void movingProb(vector<vector<Cell>>& maze, int rows, int columns, Direction direction, int directions) {
+void movingProb(vector<vector<Cell>>& maze, int rows, int columns, Direction direction) {
 	vector<vector<Cell>> predictionMaze = maze;
 	for (int i = 0; i < rows; ++i)
 		for (int j = 0; j < columns; ++j)
@@ -173,7 +173,7 @@ void movingProb(vector<vector<Cell>>& maze, int rows, int columns, Direction dir
 			if (maze[i][j].type == CellType::Wall)
 				continue;
 
-			for (int k = 0; k < directions; ++k) {
+			for (int k = 0; k < NMOVES; ++k) {
 				int newi = i + moves[k].row, newj = j + moves[k].col;
 				float prob = transitionProb[k] * maze[i][j].label;
 
@@ -190,19 +190,3 @@ void movingProb(vector<vector<Cell>>& maze, int rows, int columns, Direction dir
 	print(predictionMaze);
 	maze = predictionMaze;
 }
-
-/*
-void print(const vector<vector<Cell>>& maze) {
-	int rows = maze.size(), columns = maze[0].size();
-	for (int i = 0; i < rows; i++) {
-		cout << "  ";
-		for (int j = 0; j < columns; j++)
-			if (maze[i][j].type == CellType::Wall)
-				cout << setw(6) << right << "#####";
-			else
-				cout << setw(6) << right << fixed << setprecision(2) << maze[i][j].label * 100;
-		cout << endl;
-	}
-	cout << endl;
-}
-*/
