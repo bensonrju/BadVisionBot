@@ -21,10 +21,6 @@ const float sensingPathMisid = 0.15;
 
 RCBounds bounds = {0, 5, 0, 6};
 
-bool inside(int row, int col, int maxRow, int maxCol) {
-	return (row >= 0 && row < maxRow && col >= 0 && col < maxCol);
-}
-
 void execute(vector<vector<Cell>>& maze, Position goal);
 
 void sensing(vector<vector<Cell>>& maze, int rows, int columns, vector<bool> sensory);
@@ -125,7 +121,8 @@ vector<bool> getReality(vector<vector<Cell>>& maze, int row, int col, int maxRow
 	vector<bool> reality(4);
 	for (int i = 0; i < (int)reality.size(); i++) {
 		int new_row = row + moves[i].row, new_col = col + moves[i].col;
-		if (!inside(new_row, new_col, maxRow, maxCol))
+		//if (!inside(new_row, new_col, maxRow, maxCol))
+		if(!within(new_row, new_col, bounds))
 			reality[i] = true;
 		else
 			reality[i] = (maze[new_row][new_col].type == CellType::Wall);
@@ -177,8 +174,8 @@ void movingProb(vector<vector<Cell>>& maze, int rows, int columns, Direction dir
 				int newi = i + moves[k].row, newj = j + moves[k].col;
 				float prob = transitionProb[k] * maze[i][j].label;
 
-				if (!inside(newi, newj, rows, columns) || maze[newi][newj].type == CellType::Wall)
-                    // Probability of bouncing is added to the initial/current cell
+				if (!within(newi, newj, bounds) || maze[newi][newj].type == CellType::Wall)
+					// Probability of bouncing is added to the initial/current cell
 					predictionMaze[i][j].label += prob;
 				else
                     // Probability of moving to neighboring cell is added to the neighboring cell
