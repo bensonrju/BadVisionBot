@@ -36,7 +36,7 @@ void movingProb(vector<vector<Cell>>& maze, int rows, int columns, Direction dir
 vector<float> getTransitionProb(Direction dir);
 inline void printMovement(Direction dir);
 
-void print(const vector<vector<Cell>>& maze);
+//void print(const vector<vector<Cell>>& maze);
 
 int main() {
 	srand(time(0));
@@ -191,20 +191,7 @@ void movingProb(vector<vector<Cell>>& maze, int rows, int columns, Direction dir
 	maze = predictionMaze;
 }
 
-vector<float> getTransitionProb(Direction dir) {
-	vector<float> directionProb(4);
-	directionProb[dir.Value()] = 0.7;
-	directionProb[dir.Left().Value()] = 0.2;
-	directionProb[dir.Right().Value()] = 0.1;
-	directionProb[dir.Opposite().Value()] = 0.0;
-	return directionProb;
-}
-
-inline void printMovement(Direction dir) {
-	cout << "Prediction after attempting to move "
-		 << dir << endl;
-}
-
+/*
 void print(const vector<vector<Cell>>& maze) {
 	int rows = maze.size(), columns = maze[0].size();
 	for (int i = 0; i < rows; i++) {
@@ -218,3 +205,4 @@ void print(const vector<vector<Cell>>& maze) {
 	}
 	cout << endl;
 }
+*/

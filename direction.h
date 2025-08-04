@@ -73,3 +73,17 @@ inline constexpr Direction Direction::West{Direction::Directions::West};
 inline std::ostream& operator<<(std::ostream& os, const Direction& d) {
 	return os << d.ToString();
 }
+
+vector<float> getTransitionProb(Direction dir) {
+	vector<float> directionProb(4);
+	directionProb[dir.Value()] = 0.7;
+	directionProb[dir.Left().Value()] = 0.2;
+	directionProb[dir.Right().Value()] = 0.1;
+	directionProb[dir.Opposite().Value()] = 0.0;
+	return directionProb;
+}
+
+inline void printMovement(Direction dir) {
+	cout << "Prediction after attempting to move "
+		 << dir << endl;
+}

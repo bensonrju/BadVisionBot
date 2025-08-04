@@ -63,3 +63,17 @@ Position locate(CellType type, const vector<vector<Cell>>& arr) {
 	// Could throw here if not found
 	return Position{-1, -1};
 }
+
+void print(const vector<vector<Cell>>& maze) {
+	int rows = maze.size(), columns = maze[0].size();
+	for (int i = 0; i < rows; i++) {
+		cout << "  ";
+		for (int j = 0; j < columns; j++)
+			if (maze[i][j].type == CellType::Wall)
+				cout << setw(6) << right << "#####";
+			else
+				cout << setw(6) << right << fixed << setprecision(2) << maze[i][j].label * 100;
+		cout << endl;
+	}
+	cout << endl;
+}
