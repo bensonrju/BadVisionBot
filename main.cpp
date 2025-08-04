@@ -23,16 +23,15 @@ RCBounds bounds = {0, 5, 0, 6};
 
 void execute(vector<vector<Cell>>& maze);
 
+void initProb(vector<vector<Cell>>& maze);
+
 void sensing(vector<vector<Cell>>& maze, int rows, int columns, vector<bool> sensory);
 vector<bool> getReality(vector<vector<Cell>>& maze, int row, int col, int maxRow, int maxCol);
 float computePresence(float prev, vector<bool> reality, vector<bool> sensory);
 inline void printSensory(vector<bool> sensory);
 
 void movingProb(vector<vector<Cell>>& maze, int rows, int columns, Direction direction);
-//vector<float> getTransitionProb(Direction dir);
 inline void printMovement(Direction dir);
-
-//void print(const vector<vector<Cell>>& maze);
 
 int main() {
 	srand(time(0));
@@ -45,7 +44,7 @@ int main() {
 	};
 
 	print(maze);
-	Position goal = locate(CellType::Goal, maze);
+
 	execute(maze);
 	return 0;
 }
@@ -60,11 +59,15 @@ void execute(vector<vector<Cell>>& maze) {
 	vector<vector<Cell>> predictionMaze;
 	//0. Get Initial Location Probabilities
 	// S1 Prior Probability
+
+	initProb(maze);
+
+	/*
 	float prob = 1.0 / (countType(CellType::Path, maze) + 1);
 	for (int i = 0; i < rows; ++i)
 		for (int j = 0; j < columns; ++j)
 			if (maze[i][j].type != CellType::Wall)
-				maze[i][j].label = prob;
+				maze[i][j].label = prob;	*/
 	cout << "Initial Location Probabilities" << endl;
 	print(maze);
 
@@ -94,6 +97,16 @@ void execute(vector<vector<Cell>>& maze) {
 	//7. Sensing: [0, 1, 1, 0] //Filtering after Evidence
 	sensory = {false, true, true, false};
 	sensing(maze, rows, columns, sensory);
+}
+
+void initProb(vector<vector<Cell>>& maze) {
+	int rows = maze.size(), columns = maze[0].size();
+
+	float prob = 1.0 / (countType(CellType::Path, maze) + 1);
+	for (int i = 0; i < rows; ++i)
+		for (int j = 0; j < columns; ++j)
+			if (maze[i][j].type != CellType::Wall)
+				maze[i][j].label = prob;
 }
 
 void sensing(vector<vector<Cell>>& maze, int rows, int columns, vector<bool> sensory) {
