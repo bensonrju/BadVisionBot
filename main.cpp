@@ -6,6 +6,7 @@
 
 #include "celltype.h"
 #include "direction.h"
+#include "bounder.h"
 
 using namespace std;
 
@@ -18,16 +19,11 @@ const float sensingWallMisid = 0.05;
 const float sensingPath = 0.85;
 const float sensingPathMisid = 0.15;
 
+RCBounds bounds = {0, 5, 0, 6};
+
 bool inside(int row, int col, int maxRow, int maxCol) {
 	return (row >= 0 && row < maxRow && col >= 0 && col < maxCol);
 }
-/*
-vector<Position> moves = {
-	{ 0, -1},   // West
-	{-1,  0},   // North
-	{ 0,  1},   // East
-	{ 1,  0}    // South
-}; */
 
 void execute(vector<vector<Cell>>& maze, Position goal);
 

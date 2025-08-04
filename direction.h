@@ -1,6 +1,8 @@
 #pragma once
 #include <iostream>
 
+
+
 struct Direction {
 	enum class Directions { West = 0, North, East, South };
 
