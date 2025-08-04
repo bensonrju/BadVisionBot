@@ -21,7 +21,7 @@ const float sensingPathMisid = 0.15;
 
 RCBounds bounds = {0, 5, 0, 6};
 
-void execute(vector<vector<Cell>>& maze, Position goal);
+void execute(vector<vector<Cell>>& maze);
 
 void sensing(vector<vector<Cell>>& maze, int rows, int columns, vector<bool> sensory);
 vector<bool> getReality(vector<vector<Cell>>& maze, int row, int col, int maxRow, int maxCol);
@@ -46,11 +46,11 @@ int main() {
 
 	print(maze);
 	Position goal = locate(CellType::Goal, maze);
-	execute(maze, goal);
+	execute(maze);
 	return 0;
 }
 
-void execute(vector<vector<Cell>>& maze, Position goal) {
+void execute(vector<vector<Cell>>& maze) {
 	int rows = maze.size(), columns = maze[0].size(), directions = NMOVES;
 	//[W,N,E,S]
 	//false/0: path
@@ -121,7 +121,7 @@ vector<bool> getReality(vector<vector<Cell>>& maze, int row, int col, int maxRow
 	vector<bool> reality(4);
 	for (int i = 0; i < (int)reality.size(); i++) {
 		int new_row = row + moves[i].row, new_col = col + moves[i].col;
-		//if (!inside(new_row, new_col, maxRow, maxCol))
+		
 		if(!within(new_row, new_col, bounds))
 			reality[i] = true;
 		else
