@@ -21,13 +21,13 @@ const float sensingPathMisid = 0.15;
 bool inside(int row, int col, int maxRow, int maxCol) {
 	return (row >= 0 && row < maxRow && col >= 0 && col < maxCol);
 }
-
+/*
 vector<Position> moves = {
 	{ 0, -1},   // West
 	{-1,  0},   // North
 	{ 0,  1},   // East
 	{ 1,  0}    // South
-};
+}; */
 
 void execute(vector<vector<Cell>>& maze, Position goal);
 
@@ -59,7 +59,7 @@ int main() {
 }
 
 void execute(vector<vector<Cell>>& maze, Position goal) {
-	int rows = maze.size(), columns = maze[0].size(), directions = moves.size();
+	int rows = maze.size(), columns = maze[0].size(), directions = NMOVES;
 	//[W,N,E,S]
 	//false/0: path
 	//true/1: wall
@@ -143,18 +143,18 @@ float computePresence(float cellProbability, vector<bool> reality, vector<bool> 
 		return -1;
 
 	for (int i = 0; i < length; ++i) {
-		float probability;
+		float prob;
 		/* =====+===== Posterior Calculation =====+===== */
 		if (reality[i]) // Assuming S=(x, y)
-			probability = sensory[i]
+			prob = sensory[i]
 						  ? /* P(Zi = w | R = w) = 0.95 */ sensingWall
 						  : /* P(Zi = ~w | R = w) = 0.05 */ sensingWallMisid;
 		else
-			probability = sensory[i]
+			prob = sensory[i]
 						  ? /* P(Zi = ~w | R = ~w) = 0.85 */ sensingPathMisid
 						  : /* P(Zi = w | R = ~w) = 0.15 */ sensingPath;
 
-		cellProbability *= probability;
+		cellProbability *= prob;
 	}
 	return cellProbability;
 }

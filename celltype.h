@@ -2,11 +2,20 @@
 
 #include <vector>
 
+#define NMOVES 4
+
 using namespace std;
 
 struct Position {
 	int row;
 	int col;
+};
+
+Position moves[] = {
+	{ 0, -1},   // West
+	{-1,  0},   // North
+	{ 0,  1},   // East
+	{ 1,  0}    // South
 };
 
 enum class CellType { Path, Wall, Start, Goal };
@@ -40,6 +49,10 @@ int countType(CellType type, const vector<vector<Cell>>& arr) {
 			if (arr[i][j].type == type)
 				counter++;
 	return counter;
+}
+
+int countValidBlocks(const vector<vector<Cell>>& arr) {
+	return countType(CellType::Path, arr) + countType(CellType::Goal, arr);
 }
 
 Position locate(CellType type, const vector<vector<Cell>>& arr) {
