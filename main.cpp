@@ -29,10 +29,9 @@ void initProb(vector<vector<Cell>>& maze);
 void sensing(vector<vector<Cell>>& maze, int rows, int columns, vector<bool> sensory);
 vector<bool> getReality(vector<vector<Cell>>& maze, int row, int col, int maxRow, int maxCol);
 float computePresence(float prev, vector<bool> reality, vector<bool> sensory);
-//inline void printSensory(vector<bool> sensory);
 
 void movingProb(vector<vector<Cell>>& maze, int rows, int columns, Direction direction);
-inline void printMovement(Direction dir);
+//inline void printMovement(Direction dir);
 
 int main() {
 	srand(time(0));
@@ -45,8 +44,42 @@ int main() {
 	};
 
 	print(maze);
+	//execute(maze);
 
-	execute(maze);
+	int rows = maze.size(), columns = maze[0].size();
+	vector<bool> sensory(4);
+	vector<vector<Cell>> predictionMaze;
+
+	bounds.row_max = rows; bounds.col_max = columns;
+
+	// 0.	S1 Prior Probability
+	initProb(maze);
+
+	// 1.	S1 Posterior Probability
+	sensory = {false, false, false, true};
+	sensing(maze, rows, columns, sensory);
+
+	// 2.	S2 Prior Probability
+	movingProb(maze, rows, columns, Direction::North);
+
+	// 3.	S2 Posterior Probability
+	sensory = {true, false, false, false};
+	sensing(maze, rows, columns, sensory);
+
+	// 4.	S3 Prior Probability
+	movingProb(maze, rows, columns, Direction::North);
+
+	// 5.	S3 Posterior Probability
+	sensory = {true, true, false, false};
+	sensing(maze, rows, columns, sensory);
+
+	// 6.	S4 Prior Probability
+	movingProb(maze, rows, columns, Direction::East);
+
+	// 7.	S4 Posterior Probability
+	sensory = {false, true, true, false};
+	sensing(maze, rows, columns, sensory);
+
 	return 0;
 }
 
@@ -63,8 +96,8 @@ void execute(vector<vector<Cell>>& maze) {
 
 	initProb(maze);
 
-	cout << "Initial Location Probabilities" << endl;
-	print(maze);
+	//cout << "Initial Location Probabilities" << endl;
+	//print(maze);
 
 	//1. Sensing: [0, 0, 0, 1] //Filtering after Evidence
 	// S1 Posterior Probability
@@ -102,6 +135,9 @@ void initProb(vector<vector<Cell>>& maze) {
 		for (int j = 0; j < columns; ++j)
 			if (maze[i][j].type != CellType::Wall)
 				maze[i][j].label = prob;
+	
+	cout << "Initial Location Probabilities" << endl;
+	print(maze);
 }
 
 void sensing(vector<vector<Cell>>& maze, int rows, int columns, vector<bool> sensory) {
