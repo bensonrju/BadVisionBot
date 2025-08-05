@@ -4,6 +4,8 @@
 #include <cstdlib> // For rand() and srand()
 #include <ctime>   // For time() to seed srand()
 
+#define PROBLEN 8
+
 #include "celltype.h"
 #include "direction.h"
 #include "localization.h"
@@ -31,7 +33,6 @@ vector<bool> getReality(vector<vector<Cell>>& maze, int row, int col, int maxRow
 float computePresence(float prev, vector<bool> reality, vector<bool> sensory);
 
 void movingProb(vector<vector<Cell>>& maze, int rows, int columns, Direction direction);
-//inline void printMovement(Direction dir);
 
 int main() {
 	srand(time(0));
@@ -44,7 +45,6 @@ int main() {
 	};
 
 	print(maze);
-	//execute(maze);
 
 	int rows = maze.size(), columns = maze[0].size();
 	vector<bool> sensory(4);
@@ -83,50 +83,6 @@ int main() {
 	return 0;
 }
 
-void execute(vector<vector<Cell>>& maze) {
-	int rows = maze.size(), columns = maze[0].size(), directions = NMOVES;
-	//[W,N,E,S]
-	//false/0: path
-	//true/1: wall
-
-	vector<bool> sensory(4);
-	vector<vector<Cell>> predictionMaze;
-	//0. Get Initial Location Probabilities
-	// S1 Prior Probability
-
-	initProb(maze);
-
-	//cout << "Initial Location Probabilities" << endl;
-	//print(maze);
-
-	//1. Sensing: [0, 0, 0, 1] //Filtering after Evidence
-	// S1 Posterior Probability
-	sensory = {false, false, false, true};
-	sensing(maze, rows, columns, sensory);
-
-	//2. Moving north-ward  //Windy Movement Probability Prediction
-	// S2 Prior Probability
-	movingProb(maze, rows, columns, Direction::North);
-
-	//3. Sensing: [1, 0, 0, 0] //Filtering after Evidence
-	sensory = {true, false, false, false};
-	sensing(maze, rows, columns, sensory);
-
-	//4. Moving north-ward  //Windy Movement Probability Prediction
-	movingProb(maze, rows, columns, Direction::North);
-
-	//5. Sensing: [1, 1, 0, 0] //Filtering after Evidence
-	sensory = {true, true, false, false};
-	sensing(maze, rows, columns, sensory);
-
-	//6. Moving east-ward   //Windy Movement Probability Prediction
-	movingProb(maze, rows, columns, Direction::East);
-
-	//7. Sensing: [0, 1, 1, 0] //Filtering after Evidence
-	sensory = {false, true, true, false};
-	sensing(maze, rows, columns, sensory);
-}
-
 void initProb(vector<vector<Cell>>& maze) {
 	int rows = maze.size(), columns = maze[0].size();
 
@@ -145,9 +101,11 @@ void sensing(vector<vector<Cell>>& maze, int rows, int columns, vector<bool> sen
 	for (int i = 0; i < rows; ++i)
 		for (int j = 0; j < columns; ++j)
 			if (maze[i][j].type != CellType::Wall) {
-				float nonNormalized = computePresence(maze[i][j].label,
-													  getReality(maze, i, j, rows, columns),
-													  sensory);
+				float nonNormalized = computePresence(
+								maze[i][j].label,
+								getReality(maze, i, j, rows, columns),
+								sensory);
+
 				sum += nonNormalized;
 				maze[i][j].label = nonNormalized;
 			}
@@ -184,12 +142,12 @@ float computePresence(float cellProbability, vector<bool> reality, vector<bool> 
 		/* =====+===== Posterior Calculation =====+===== */
 		if (reality[i]) // Assuming S=(x, y)
 			prob = sensory[i]
-						  ? /* P(Zi = w | R = w) = 0.95 */ sensingWall
-						  : /* P(Zi = ~w | R = w) = 0.05 */ sensingWallMisid;
+				  ? /* P(Zi = w | R = w) = 0.95 */ sensingWall
+				  : /* P(Zi = ~w | R = w) = 0.05 */ sensingWallMisid;
 		else
 			prob = sensory[i]
-						  ? /* P(Zi = ~w | R = ~w) = 0.85 */ sensingPathMisid
-						  : /* P(Zi = w | R = ~w) = 0.15 */ sensingPath;
+				  ? /* P(Zi = ~w | R = ~w) = 0.85 */ sensingPathMisid
+				  : /* P(Zi = w | R = ~w) = 0.15 */ sensingPath;
 
 		cellProbability *= prob;
 	}

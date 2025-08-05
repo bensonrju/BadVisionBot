@@ -1,8 +1,14 @@
 #pragma once
 
 #include <vector>
+#include <string.h>
 
 #define NMOVES 4
+
+
+#ifndef PROBLEN
+#define PROBLEN 6
+#endif
 
 using namespace std;
 
@@ -52,7 +58,8 @@ int countType(CellType type, const vector<vector<Cell>>& arr) {
 }
 
 int countValidBlocks(const vector<vector<Cell>>& arr) {
-	return countType(CellType::Path, arr) + countType(CellType::Goal, arr);
+	return countType(CellType::Path, arr) 
+		 + countType(CellType::Goal, arr);
 }
 
 Position locate(CellType type, const vector<vector<Cell>>& arr) {
@@ -64,16 +71,29 @@ Position locate(CellType type, const vector<vector<Cell>>& arr) {
 	return Position{-1, -1};
 }
 
+string genWall() {
+	int wallLen = PROBLEN - 1;
+	string wall = "";
+	for (int i = 0; i < wallLen; i++)
+		wall += "#";
+
+	return wall;
+}
+
 void print(const vector<vector<Cell>>& maze) {
 	int rows = maze.size(), columns = maze[0].size();
+	int DECPREC = PROBLEN - 4;
 	for (int i = 0; i < rows; i++) {
 		cout << "  ";
 		for (int j = 0; j < columns; j++)
 			if (maze[i][j].type == CellType::Wall)
-				cout << setw(6) << right << "#####";
+				cout << setw(PROBLEN) << right << genWall();
 			else
-				cout << setw(6) << right << fixed << setprecision(2) << maze[i][j].label * 100;
+				cout << setw(PROBLEN) << right 
+					 << fixed << setprecision(DECPREC) 
+					 << maze[i][j].label * 100;
 		cout << endl;
 	}
 	cout << endl;
 }
+
