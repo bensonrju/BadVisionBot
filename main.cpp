@@ -4,7 +4,7 @@
 #include <cstdlib> // For rand() and srand()
 #include <ctime>   // For time() to seed srand()
 
-#define PROBLEN 8
+//#define PROBLEN 8
 
 #include "celltype.h"
 #include "direction.h"
@@ -24,8 +24,6 @@ const float sensingPathMisid = 0.15;
 
 RCBounds bounds = {0, 5, 0, 6};
 
-void execute(vector<vector<Cell>>& maze);
-
 void initProb(vector<vector<Cell>>& maze);
 
 void sensing(vector<vector<Cell>>& maze, int rows, int columns, vector<bool> sensory);
@@ -35,7 +33,6 @@ float computePresence(float prev, vector<bool> reality, vector<bool> sensory);
 void movingProb(vector<vector<Cell>>& maze, int rows, int columns, Direction direction);
 
 int main() {
-	srand(time(0));
 	vector<vector<Cell>> maze = {
 		{Cell::Path(),	Cell::Path(),	Cell::Path(),	Cell::Path(),	Cell::Path(),	Cell::Path()},
 		{Cell::Path(),	Cell::Wall(),	Cell::Wall(),	Cell::Wall(),	Cell::Wall(),	Cell::Path()},
@@ -50,7 +47,9 @@ int main() {
 	vector<bool> sensory(4);
 	vector<vector<Cell>> predictionMaze;
 
-	bounds.row_max = rows; bounds.col_max = columns;
+	if(boundsCheck(rows, columns, bounds)) {
+		bounds.row_max = rows; bounds.col_max = columns;
+	}
 
 	// 0.	S1 Prior Probability
 	initProb(maze);

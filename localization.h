@@ -28,3 +28,19 @@ bool within(int row, int col, RCBounds& gBounds) {
             && (col >= gBounds.col_min) 
             && (col < gBounds.col_max) );
 }
+
+bool boundsCheck(int rows, int columns, RCBounds gBounds) {
+	bool err = false;
+	if(gBounds.row_max != rows) {
+		cout << "ERROR: Given row size: " << gBounds.row_max 
+			 << "   Calculated row rize: " << rows << endl;
+		err = true;
+	}
+	
+	if(gBounds.col_max != columns) {
+		cout << "ERROR: Given column size: " << gBounds.col_max 
+			 << "   Calculated column rize: " << columns << endl;
+		err = true;
+	}
+	return err;
+}
