@@ -6,7 +6,8 @@
 
 #include "celltype.h"
 #include "direction.h"
-#include "bounder.h"
+#include "localization.h"
+
 
 using namespace std;
 
@@ -28,7 +29,7 @@ void initProb(vector<vector<Cell>>& maze);
 void sensing(vector<vector<Cell>>& maze, int rows, int columns, vector<bool> sensory);
 vector<bool> getReality(vector<vector<Cell>>& maze, int row, int col, int maxRow, int maxCol);
 float computePresence(float prev, vector<bool> reality, vector<bool> sensory);
-inline void printSensory(vector<bool> sensory);
+//inline void printSensory(vector<bool> sensory);
 
 void movingProb(vector<vector<Cell>>& maze, int rows, int columns, Direction direction);
 inline void printMovement(Direction dir);
@@ -157,12 +158,6 @@ float computePresence(float cellProbability, vector<bool> reality, vector<bool> 
 		cellProbability *= prob;
 	}
 	return cellProbability;
-}
-
-inline void printSensory(vector<bool> sensory) {
-	cout << "Filtering after Evidence ["
-		 << sensory[0] << ", " << sensory[1] << ", "
-		 << sensory[2] << ", " << sensory[3] << "]" << endl;
 }
 
 void movingProb(vector<vector<Cell>>& maze, int rows, int columns, Direction direction) {
